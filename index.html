@@ -1,0 +1,1292 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Mapa radial interactivo de documentos, testimonios y linajes biográficos de Jorge Eduardo Eielson." />
+  <title>Linajes biográficos de Jorge Eduardo Eielson</title>
+  <style>
+    :root {
+      --paper: #f4f1eb;
+      --paper-2: #ece8e0;
+      --ink: #1e2933;
+      --muted: #67717a;
+      --line: #c9c4bb;
+      --panel: rgba(250, 248, 244, 0.94);
+      --accent: #294b63;
+      --conflict: #b34f49;
+      --focus: #0f6c76;
+      --shadow: 0 18px 45px rgba(25, 31, 37, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      overflow: hidden;
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(270px, 330px) 1fr;
+    }
+
+    aside {
+      z-index: 5;
+      background: var(--panel);
+      border-right: 1px solid rgba(30, 41, 51, .12);
+      padding: 28px 24px 22px;
+      overflow-y: auto;
+      backdrop-filter: blur(16px);
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(30px, 3.2vw, 48px);
+      font-weight: 500;
+      line-height: .98;
+      letter-spacing: -.035em;
+    }
+
+    .intro {
+      color: var(--muted);
+      margin: 16px 0 24px;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .controls {
+      display: grid;
+      gap: 10px;
+      padding: 15px;
+      border: 1px solid rgba(30, 41, 51, .12);
+      background: rgba(255,255,255,.42);
+      border-radius: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    input[type="search"], select {
+      width: 100%;
+      border: 1px solid rgba(30, 41, 51, .17);
+      background: #fbfaf7;
+      color: var(--ink);
+      border-radius: 9px;
+      padding: 9px 10px;
+      outline: none;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    input:focus, select:focus { border-color: var(--focus); box-shadow: 0 0 0 3px rgba(15,108,118,.1); }
+
+    .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button {
+      border: 1px solid rgba(30, 41, 51, .15);
+      background: #fbfaf7;
+      color: var(--ink);
+      padding: 9px 10px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 650;
+      font-size: 12px;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+    button:hover { transform: translateY(-1px); background: #fff; border-color: rgba(30, 41, 51, .3); }
+
+    .section-title {
+      margin: 26px 0 10px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    .legend { display: grid; gap: 8px; }
+    .legend-row { display: grid; grid-template-columns: 13px 1fr; align-items: start; gap: 9px; font-size: 12px; line-height: 1.38; }
+    .swatch { width: 10px; height: 10px; margin-top: 3px; border-radius: 50%; background: var(--accent); }
+    .swatch.claim { background: var(--paper); border: 1.8px solid #78818a; }
+    .swatch.conflict { background: var(--conflict); }
+    .swatch.path { width: 13px; height: 2px; border-radius: 0; margin-top: 8px; background: #333f49; }
+
+    #inspector {
+      min-height: 128px;
+      padding: 14px 15px;
+      background: rgba(255,255,255,.46);
+      border: 1px solid rgba(30, 41, 51, .11);
+      border-radius: 14px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    #inspector strong { display: block; margin-bottom: 5px; font-size: 14px; }
+    #inspector .meta { color: var(--muted); }
+    #inspector a { color: var(--focus); text-decoration: none; border-bottom: 1px solid rgba(15,108,118,.3); }
+    #inspector a:hover { border-bottom-color: var(--focus); }
+
+    .sources { display: grid; gap: 7px; }
+    .sources a, .sources span { color: var(--muted); text-decoration: none; font-size: 11px; line-height: 1.35; }
+    .sources a:hover { color: var(--ink); }
+    .compare-topic.active-compare, #clearCompare.active-compare {
+      background: #eef1f3;
+      border-color: rgba(30,41,51,.34);
+      box-shadow: inset 0 0 0 1px rgba(30,41,51,.06);
+    }
+    .comparison-group { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(30,41,51,.08); }
+    .comparison-group:first-of-type { margin-top: 8px; }
+    .comparison-group h4 { margin: 0 0 4px; font-size: 12px; line-height: 1.3; }
+    .comparison-group ul { margin: 0; padding-left: 16px; }
+    .comparison-group li { margin: 0 0 5px; }
+    .comparison-badge { display: inline-block; margin-top: 6px; padding: 2px 7px; border-radius: 999px; background: rgba(179,79,73,.12); color: #7e3b36; font-size: 10px; font-weight: 700; letter-spacing: .02em; }
+
+    main { position: relative; min-width: 0; overflow: hidden; }
+    .stage {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.58) 0 14%, transparent 48%),
+        linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+    }
+
+    #chart { width: 100%; height: 100%; display: block; }
+
+    .map-title {
+      position: absolute;
+      top: 24px;
+      left: 28px;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .map-title h2 { margin: 0; font-size: 15px; letter-spacing: .06em; text-transform: uppercase; }
+    .map-title p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+
+    .hint {
+      position: absolute;
+      right: 22px;
+      bottom: 18px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .03em;
+      background: rgba(244,241,235,.78);
+      padding: 7px 9px;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .link {
+      fill: none;
+      stroke: #93989b;
+      stroke-opacity: .28;
+      stroke-width: 0.95px;
+      transition: stroke-opacity .22s ease, stroke-width .22s ease, stroke .22s ease;
+    }
+    .link.lineage-link { stroke-opacity: .56; stroke-width: 1.45px; }
+    .link.conflict-link { stroke: var(--conflict); stroke-opacity: .5; }
+    .link.dimmed { stroke-opacity: .045; }
+    .link.active { stroke-opacity: .93; stroke-width: 2.2px; }
+
+    .node { cursor: pointer; }
+    .node circle {
+      fill: var(--paper);
+      stroke: #68727a;
+      stroke-width: 1.6px;
+      transition: r .18s ease, opacity .18s ease, stroke-width .18s ease, fill .18s ease;
+    }
+    .node.root circle { fill: #202d37; stroke: #202d37; }
+    .node.lineage circle { stroke-width: 2.6px; fill: #faf8f3; }
+    .node.source circle { fill: #f7f4ee; stroke-width: 1.8px; }
+    .node.category circle { fill: #e2ddd4; stroke: #81868a; stroke-width: 1px; }
+    .node.claim.conflict circle { fill: var(--conflict); stroke: var(--conflict); }
+    .node.dimmed { opacity: .09; }
+    .node.active circle, .node:hover circle { stroke-width: 3px; }
+
+    .node text {
+      fill: #27343e;
+      font-size: 9.8px;
+      paint-order: stroke;
+      stroke: var(--paper);
+      stroke-width: 4px;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .node.lineage text { font-weight: 750; font-size: 12.5px; }
+    .node.source text { font-size: 10.4px; font-weight: 720; fill: #2f3a42; }
+    .node.category text { font-size: 8.8px; font-weight: 740; fill: #70767a; letter-spacing: .03em; text-transform: uppercase; }
+    .node.root text { fill: #fff; stroke: none; font-family: Georgia, "Times New Roman", serif; font-size: 23px; font-weight: 600; text-anchor: middle; letter-spacing: -0.01em; }
+    .node.claim.conflict text { font-weight: 720; fill: #6f2e2a; }
+
+    .conflict-mark {
+      font-size: 9px !important;
+      font-weight: 900;
+      fill: #fff !important;
+      stroke: none !important;
+      text-anchor: middle !important;
+    }
+
+    .ring { fill: none; stroke: rgba(32,45,55,.1); stroke-width: 1px; stroke-dasharray: 1.5 8; }
+
+    .tooltip {
+      position: fixed;
+      z-index: 20;
+      max-width: 310px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(30, 41, 51, .94);
+      color: white;
+      font-size: 11px;
+      line-height: 1.42;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity .14s ease, transform .14s ease;
+    }
+    .tooltip.visible { opacity: 1; transform: translateY(0); }
+    .tooltip .tip-meta { margin-top: 5px; color: #bcc7ce; }
+
+    @media (max-width: 900px) {
+      body { overflow: auto; }
+      .app { display: block; height: auto; }
+      aside { position: relative; width: 100%; border-right: 0; border-bottom: 1px solid rgba(30,41,51,.12); }
+      main { height: 76vh; min-height: 620px; }
+      .sources { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <p class="eyebrow">Cartografía de fuentes</p>
+    <h1>Jorge Eduardo<br>Eielson</h1>
+    <p class="intro">El mapa distingue <strong>documentos, autonarraciones, testimonios, síntesis curatoriales y biografías institucionales</strong>. Permite observar cómo una misma vida produce fechas, familias y trayectorias parcialmente incompatibles.</p>
+
+    <div class="controls">
+      <label>Buscar dato o institución
+        <input id="search" type="search" placeholder="Ej.: 1923, Xammar, Arguedas…" autocomplete="off" />
+      </label>
+      <label>Filtrar por tema
+        <select id="topicFilter">
+          <option value="all">Todos los temas</option>
+          <option value="nacimiento">Nacimiento</option>
+          <option value="familia">Familia e infancia</option>
+          <option value="viaje">Salida del Perú / Europa</option>
+          <option value="formacion">Formación y redes</option>
+          <option value="premios">Premios y obra</option>
+          <option value="identidad">Identidad y autorrepresentación</option>
+          <option value="residencias">Residencias y vida cotidiana</option>
+          <option value="espiritualidad">Espiritualidad</option>
+        </select>
+      </label>
+      <div class="button-row">
+        <button id="conflictsBtn" type="button">Solo contradicciones</button>
+        <button id="resetBtn" type="button">Restablecer</button>
+      </div>
+      <div class="button-row">
+        <button id="exportSvg" type="button">Exportar SVG</button>
+        <button id="fitBtn" type="button">Centrar mapa</button>
+      </div>
+    </div>
+
+    <p class="section-title">Comparación por tema</p>
+    <div class="button-row" style="grid-template-columns:1fr 1fr; margin-bottom:8px;">
+      <button class="compare-topic" data-topic="nacimiento" type="button">Nacimiento</button>
+      <button class="compare-topic" data-topic="familia" type="button">Familia</button>
+    </div>
+    <div class="button-row" style="grid-template-columns:1fr 1fr; margin-bottom:8px;">
+      <button class="compare-topic" data-topic="viaje" type="button">Viaje</button>
+      <button class="compare-topic" data-topic="formacion" type="button">Formación</button>
+    </div>
+    <div class="button-row" style="grid-template-columns:1fr 1fr; margin-bottom:8px;">
+      <button class="compare-topic" data-topic="premios" type="button">Premios</button>
+      <button class="compare-topic" data-topic="identidad" type="button">Identidad</button>
+    </div>
+    <div class="button-row" style="grid-template-columns:1fr 1fr; margin-bottom:8px;">
+      <button class="compare-topic" data-topic="residencias" type="button">Residencias</button>
+      <button class="compare-topic" data-topic="espiritualidad" type="button">Espiritualidad</button>
+    </div>
+    <div class="button-row" style="grid-template-columns:1fr; margin-bottom:2px;">
+      <button id="clearCompare" type="button">Salir de la comparación</button>
+    </div>
+
+    <p class="section-title">Cómo leerlo</p>
+    <div class="legend">
+      <div class="legend-row"><span class="swatch"></span><span><strong>Linaje:</strong> régimen de evidencia o familia de relatos.</span></div>
+      <div class="legend-row"><span class="swatch claim"></span><span><strong>Dato:</strong> afirmación atribuida a una fuente concreta.</span></div>
+      <div class="legend-row"><span class="swatch conflict"></span><span><strong>Nudo:</strong> afirmación que entra en tensión con otra.</span></div>
+      <div class="legend-row"><span class="swatch path"></span><span><strong>D</strong> documento · <strong>A</strong> autonarración · <strong>P</strong> testimonio presencial · <strong>B</strong> biobibliografía · <strong>I</strong> interpretación/síntesis.</span></div>
+    </div>
+
+    <p class="section-title">Detalle seleccionado</p>
+    <div id="inspector">
+      <strong>Explora el mapa</strong>
+      <span class="meta">Haz clic en una fuente o en un dato para ver su procedencia, tema y relación con otras versiones.</span>
+    </div>
+
+    <p class="section-title">Fuentes incorporadas</p>
+    <div class="sources">
+      <span>Partida de nacimiento judicial solicitada por Eielson en 1948.</span>
+      <span>Carta de Eielson a Luis Fabio Xammar, 9 de mayo de 1941.</span>
+      <span>Alejandro Romualdo y Sebastián Salazar Bondy, <em>Antología general de la poesía peruana</em>, 1957.</span>
+      <span>Luis Alberto Ratto, <em>Poéticas peruanas del siglo XX</em>, La Rama Florida, 1961.</span>
+      <span>José Ignacio Padilla (ed.), <em>Nu/do. Homenaje a J. E. Eielson</em>, PUCP, 2002.</span>
+      <span><em>Eielson</em>, catálogo de la retrospectiva del MALI, 2018.</span>
+      <span><em>Libros &amp; Artes</em>, Biblioteca Nacional del Perú, n.º 14–15, 2006.</span>
+      <a target="_blank" rel="noopener" href="https://centroeielson.com/biografia/">Centro Studi Jorge Eielson — Biografía</a>
+      <a target="_blank" rel="noopener" href="https://festival-eielson100.pucp.edu.pe/sobre-el-evento/biografia.html">Festival Eielson 100 PUCP — Biografía</a>
+      <a target="_blank" rel="noopener" href="https://www.jorgeeielson.org/english-biography.html">Archivio Eielson — Biography</a>
+      <a target="_blank" rel="noopener" href="https://www.bnp.gob.pe/bnp-celebra-el-centenario-del-natalicio-del-poeta-jorge-eduardo-eielson/">Biblioteca Nacional del Perú</a>
+      <a target="_blank" rel="noopener" href="https://www.casadelaliteratura.gob.pe/">Casa de la Literatura Peruana</a>
+      <a target="_blank" rel="noopener" href="https://www.ccincagarcilaso.gob.pe/actividades/los-reinos-de-eielson/">Centro Cultural Inca Garcilaso</a>
+      <a target="_blank" rel="noopener" href="https://fundacionbbva.pe/nota/eielson-centenario-eielson-eterno/">Fundación BBVA Perú</a>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stage">
+      <div class="map-title">
+        <h2>Una biografía abierta: 1921 · 1922 · 1923 · 1924</h2>
+        <p>Fuentes, transmisiones y contradicciones · D3.js</p>
+      </div>
+      <svg id="chart" role="img" aria-label="Mapa radial de documentos, testimonios y biografías de Jorge Eduardo Eielson"></svg>
+      <div class="hint">Rueda: zoom · arrastra: desplazar · clic: inspeccionar</div>
+    </div>
+  </main>
+</div>
+<div id="tooltip" class="tooltip"></div>
+<script src="d3.v3.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var SOURCES = {
+    early_lineage: {
+      label: "Documentos y fuentes tempranas",
+      type: "Régimen documental y biobibliográfico",
+      color: "#46535c",
+      url: "",
+      note: "Reúne documentos y publicaciones producidos durante la vida de Eielson o muy próximos a los hechos narrados."
+    },
+    self_lineage: {
+      label: "Autonarraciones de Eielson",
+      type: "Declaraciones y escritura autobiográfica",
+      color: "#667364",
+      url: "",
+      note: "Incluye entrevistas, cartas y textos en los que Eielson modela retrospectivamente su identidad y su trayectoria."
+    },
+    witness_lineage: {
+      label: "Testimonios de contemporáneos",
+      type: "Memorias y testimonios presenciales",
+      color: "#796b5d",
+      url: "",
+      note: "Agrupa recuerdos de personas que conocieron a Eielson en Lima o Europa. No todas sus afirmaciones tienen el mismo grado de observación directa."
+    },
+    synthesis_lineage: {
+      label: "Síntesis curatoriales y críticas",
+      type: "Montajes documentales e interpretativos",
+      color: "#536b78",
+      url: "",
+      note: "Publicaciones que reúnen documentos, testimonios, prensa, archivos e interpretaciones para producir una cronología o un retrato biográfico."
+    },
+    institutional_lineage: {
+      label: "Biografías institucionales",
+      type: "Difusión cultural e institucional",
+      color: "#6c6370",
+      url: "",
+      note: "Semblanzas publicadas por instituciones y archivos. La repetición entre páginas no implica necesariamente investigaciones independientes."
+    },
+
+    partida: {
+      label: "Partida judicial solicitada en 1948",
+      type: "Documento oficial tardío",
+      color: "#46535c",
+      url: "",
+      reference: "Partida de nacimiento emitida por auto judicial en 1948.",
+      note: "No es un registro producido al nacer, sino una inscripción tardía solicitada por el propio Eielson y sustentada en una partida de defunción y testimonios."
+    },
+    xammar: {
+      label: "Carta a Luis Fabio Xammar, 9 mayo 1941",
+      type: "Carta privada / autonarración contemporánea",
+      color: "#46535c",
+      url: "",
+      reference: "Jorge Eduardo Eielson, carta a Luis Fabio Xammar, Lima, 9 de mayo de 1941.",
+      note: "Eielson declara que «recién» tiene dieciocho años. Sin asumir el día de cumpleaños, la carta sitúa el nacimiento entre el 10 de mayo de 1922 y el 9 de mayo de 1923. Si se acepta el 13 de abril como cumpleaños, el año resultante es 1923."
+    },
+    antologia1957: {
+      label: "Romualdo / Salazar Bondy, 1957",
+      type: "Fuente biobibliográfica temprana",
+      color: "#46535c",
+      url: "",
+      reference: "Alejandro Romualdo y Sebastián Salazar Bondy (eds.), Antología general de la poesía peruana, 1957.",
+      note: "La ficha presenta expresamente a Eielson como nacido en 1921. Salazar Bondy pertenecía a su círculo próximo, pero la autoría específica de la nota y la procedencia del dato no están identificadas."
+    },
+    rama_florida: {
+      label: "Ratto / La Rama Florida, 1961",
+      type: "Fuente biobibliográfica temprana",
+      color: "#46535c",
+      url: "",
+      reference: "Luis Alberto Ratto, Poéticas peruanas del siglo XX, Lima, Antologías de La Rama Florida, 1961, p. 103.",
+      note: "La publicación de la editorial de Javier Sologuren presenta expresamente a Eielson como nacido en 1922. La procedencia original del dato no está indicada."
+    },
+
+    ribeyro: {
+      label: "Eielson a Julio Ramón Ribeyro, 1972",
+      type: "Entrevista / autonarración",
+      color: "#667364",
+      url: "",
+      reference: "Julio Ramón Ribeyro, entrevista a Jorge Eduardo Eielson, 1972.",
+      note: "Eielson rechaza las identidades profesionales cerradas y organiza retrospectivamente los periodos de su actividad."
+    },
+    naturaleza: {
+      label: "«Naturaleza muerta»",
+      type: "Autorreferencia poética",
+      color: "#667364",
+      url: "",
+      reference: "Jorge Eduardo Eielson, poema «Naturaleza muerta».",
+      note: "La fecha aparece dentro de una construcción poética; es una autonarración, no un registro civil."
+    },
+    canfield_dialogue: {
+      label: "Eielson en conversación con Canfield",
+      type: "Testimonio autobiográfico transmitido",
+      color: "#667364",
+      url: "",
+      reference: "Conversación recogida por Martha Canfield y evocada en Libros & Artes, 2006.",
+      note: "Eielson afirma que intentó hacer de su vida una obra de arte y que deseaba convertir también su muerte en una obra."
+    },
+
+    szyszlo: {
+      label: "Fernando de Szyszlo — recuerdo testimonial",
+      type: "Testimonio presencial",
+      color: "#796b5d",
+      url: "",
+      reference: "Testimonio publicado en Libros & Artes, 2006.",
+      note: "Conoció a Eielson desde la etapa limeña y ofrece recuerdos sobre Lince, el museo, la salida hacia París y su carácter filosófico."
+    },
+    hinostroza: {
+      label: "Rodolfo Hinostroza — París",
+      type: "Testimonio presencial y memoria",
+      color: "#796b5d",
+      url: "",
+      reference: "Rodolfo Hinostroza, «Con Eielson en París», Libros & Artes, 2006.",
+      note: "Combina observación directa de la casa y el taller con conjeturas sobre la intimidad de Eielson y Michele."
+    },
+    hastings: {
+      label: "Rafael Hastings — vida cotidiana",
+      type: "Testimonio presencial",
+      color: "#796b5d",
+      url: "",
+      reference: "Rafael Hastings, testimonio publicado en Libros & Artes, 2006.",
+      note: "Ofrece un retrato cotidiano de Eielson en París y datos sobre su economía, amistades y sentimiento de extranjería."
+    },
+    bueno: {
+      label: "Leoncio Bueno — recuerdo de 1943",
+      type: "Memoria testimonial",
+      color: "#796b5d",
+      url: "",
+      reference: "Leoncio Bueno, «1943: encuentro con Eielson, Sologuren y Salazar Bondy», Libros & Artes, 2006.",
+      note: "Sitúa a Eielson dentro del ambiente poético limeño de 1943 y aporta un retrato temprano."
+    },
+
+    mali: {
+      label: "Catálogo MALI, 2018",
+      type: "Síntesis documental-curatorial",
+      color: "#536b78",
+      url: "",
+      reference: "Eielson, catálogo de la retrospectiva del Museo de Arte de Lima, 2018, sección «Biografía».",
+      note: "Cronología de montaje que combina partida judicial, censos estadounidenses, prensa histórica, entrevistas, cartas, testimonios, catálogos y estudios anteriores."
+    },
+    nudo2002: {
+      label: "Nu/do — PUCP, 2002",
+      type: "Metanodo editorial / homenaje documental",
+      color: "#536b78",
+      url: "",
+      reference: "José Ignacio Padilla (ed.), Nu/do. Homenaje a J. E. Eielson, Fondo Editorial PUCP, 2002.",
+      note: "El volumen reúne cronología, textos de Eielson, entrevistas, recuerdos, ensayos, imágenes y bibliografía. No ofrece una sola biografía: anuda materiales heterogéneos y produce, en palabras de Padilla, la imagen de «un cierto Eielson»."
+    },
+    canfield2006: {
+      label: "Martha Canfield, Libros & Artes, 2006",
+      type: "Semblanza crítica y testimonial",
+      color: "#536b78",
+      url: "",
+      reference: "Martha Canfield, «El hombre que anudaba estrellas y palabras», Libros & Artes, 2006.",
+      note: "Consolida una cronología 1924–2006 y produce la imagen del artista sereno, múltiple y espiritualmente próximo al zen."
+    },
+
+    centrostudi: {
+      label: "Centro Studi Jorge Eielson — biografía",
+      type: "Biografía institucional",
+      color: "#6c6370",
+      url: "https://centroeielson.com/biografia/",
+      reference: "Centro Studi Jorge Eielson, biografía institucional.",
+      note: "Presenta la secuencia 1924, padre norteamericano de origen noruego y viaje a París en 1949."
+    },
+    festival: {
+      label: "Festival Eielson 100 PUCP, 2024",
+      type: "Biografía institucional",
+      color: "#6c6370",
+      url: "https://festival-eielson100.pucp.edu.pe/sobre-el-evento/biografia.html",
+      reference: "Festival Eielson 100, PUCP, 2024.",
+      note: "Reproduce una secuencia muy próxima a la del Centro Studi; no debe contarse como confirmación independiente."
+    },
+    archivio: {
+      label: "Archivio Eielson — biografía",
+      type: "Archivo y relato biográfico",
+      color: "#6c6370",
+      url: "https://www.jorgeeielson.org/english-biography.html",
+      reference: "Archivio Eielson, biografía en línea.",
+      note: "Combina datos biográficos con recuerdos y declaraciones atribuidas al propio Eielson."
+    },
+    bnp: {
+      label: "Biblioteca Nacional del Perú, 2024",
+      type: "Semblanza institucional",
+      color: "#6c6370",
+      url: "https://www.bnp.gob.pe/bnp-celebra-el-centenario-del-natalicio-del-poeta-jorge-eduardo-eielson/",
+      reference: "Biblioteca Nacional del Perú, nota por el centenario, 2024.",
+      note: "Introduce datos específicos sobre un viaje infantil a Estados Unidos, París en 1948 y Maquillage en 1946."
+    },
+    caslit: {
+      label: "Casa de la Literatura Peruana",
+      type: "Semblanza institucional",
+      color: "#6c6370",
+      url: "https://www.casadelaliteratura.gob.pe/",
+      reference: "Casa de la Literatura Peruana, materiales sobre Jorge Eduardo Eielson.",
+      note: "Prioriza la generación del cincuenta, San Marcos, las redes literarias y el itinerario europeo."
+    },
+    cancilleria: {
+      label: "Cancillería / C. C. Inca Garcilaso",
+      type: "Semblanza institucional",
+      color: "#6c6370",
+      url: "https://www.ccincagarcilaso.gob.pe/actividades/los-reinos-de-eielson/",
+      reference: "Centro Cultural Inca Garcilaso, «Los reinos de Eielson».",
+      note: "Adopta 1924, la filiación paterna norteamericana-noruega y una lectura europeo-oriental de su formación."
+    },
+    bbva: {
+      label: "Fundación BBVA Perú, 2024",
+      type: "Semblanza institucional",
+      color: "#6c6370",
+      url: "https://fundacionbbva.pe/nota/eielson-centenario-eielson-eterno/",
+      reference: "Fundación BBVA Perú, «Eielson centenario, Eielson eterno», 2024.",
+      note: "Difunde el relato del abandono, la adopción y la familia adoptiva; fecha el premio teatral de Maquillage en 1948."
+    }
+  };
+
+  var EVIDENCE_LABELS = {
+    D: "Documento",
+    A: "Autonarración",
+    P: "Testimonio presencial",
+    B: "Fuente biobibliográfica",
+    I: "Interpretación o síntesis",
+    R: "Recuerdo indirecto o conjetura"
+  };
+
+  function claim(name, topic, status, sourceId, evidence, note) {
+    return { name: name, kind: "claim", topic: topic, status: status || "stable", sourceId: sourceId, evidence: evidence || "I", note: note || "" };
+  }
+  function inferCategoryTopic(name) {
+    var map = {
+      "Nacimiento": "nacimiento",
+      "Familia": "familia",
+      "Familia e infancia": "familia",
+      "Infancia": "familia",
+      "Trayectoria": "viaje",
+      "Salida a Europa": "viaje",
+      "Europa": "viaje",
+      "Itinerario": "viaje",
+      "Formación": "formacion",
+      "Formación y redes": "formacion",
+      "Premios y obra": "premios",
+      "Teatro": "premios",
+      "Obra": "identidad",
+      "Identidad": "identidad",
+      "Autorrepresentación": "identidad",
+      "Residencias y vida cotidiana": "residencias",
+      "Espiritualidad": "espiritualidad"
+    };
+    return map[name] || null;
+  }
+  function category(name, children) { return { name: name, kind: "category", topic: inferCategoryTopic(name), children: children }; }
+  function sourceNode(sourceId, children) {
+    return { name: SOURCES[sourceId].label, kind: "source", sourceId: sourceId, children: children };
+  }
+  function lineage(sourceId, children) {
+    return { name: SOURCES[sourceId].label, kind: "lineage", sourceId: sourceId, children: children };
+  }
+
+  var data = {
+    name: "Jorge Eduardo Eielson",
+    kind: "root",
+    children: [
+      lineage("early_lineage", [
+        sourceNode("partida", [
+          category("Nacimiento", [
+            claim("13 de abril de 1921", "nacimiento", "conflict", "partida", "D", "Año consignado en la partida judicial solicitada por Eielson en 1948.")
+          ])
+        ]),
+        sourceNode("xammar", [
+          category("Nacimiento", [
+            claim("9 mayo 1941: «recién tengo 18 años» → 1923 si nació el 13 de abril", "nacimiento", "conflict", "xammar", "A", "El 13 de abril de 1923 habría cumplido dieciocho años menos de un mes antes de fechar la carta."),
+            claim("Sin asumir el cumpleaños: nacimiento entre 10 mayo 1922 y 9 mayo 1923", "nacimiento", "variant", "xammar", "A", "La edad declarada establece un intervalo; 1923 es una inferencia condicionada por aceptar el 13 de abril.")
+          ]),
+          category("Formación", [
+            claim("Fue alumno de Xammar en Preceptiva Literaria en el Hipólito Unanue, 1939", "formacion", "stable", "xammar", "A", "La carta identifica curso, profesor y colegio."),
+            claim("Xammar dudó de la autoría de un trabajo sobre la huachafa limeña", "formacion", "variant", "xammar", "A", "La escena se asemeja al relato posterior en que Arguedas sospecha que copió sus composiciones sobre los trágicos griegos."),
+            claim("Atribuye a Xammar haber despertado por primera vez su amor por la poesía", "formacion", "conflict", "xammar", "A", "Matiza el linaje biográfico que presenta a Arguedas como descubridor único de su vocación."),
+            claim("Afirma que llevaba pocos meses leyendo intensamente y cinco meses escribiendo versos", "formacion", "variant", "xammar", "A", "La carta ofrece un autorretrato intelectual contemporáneo a su iniciación literaria.")
+          ]),
+          category("Familia e infancia", [
+            claim("La muerte de un hermano a fines de agosto de 1940 cambió el curso de su vida", "familia", "variant", "xammar", "A", "El duelo aparece ligado al abandono del colegio y a su giro hacia los libros.")
+          ]),
+          category("Premios y obra", [
+            claim("Fecha su primer poema, «El sueño del príncipe encantado», el 1 de diciembre de 1940", "premios", "variant", "xammar", "A", "La carta conserva el relato más temprano del inicio de su escritura poética.")
+          ]),
+          category("Residencias y vida cotidiana", [
+            claim("Pide ser contactado en Sandia n.º 235, Lima", "residencias", "stable", "xammar", "D", "La posdata documenta una residencia limeña concreta en 1941.")
+          ])
+        ]),
+        sourceNode("antologia1957", [
+          category("Nacimiento", [
+            claim("«Nació en 1921»", "nacimiento", "conflict", "antologia1957", "B", "Fecha impresa en una antología editada por Alejandro Romualdo y Sebastián Salazar Bondy durante la vida de Eielson.")
+          ]),
+          category("Premios y obra", [
+            claim("Reinos figura como publicación de 1945", "premios", "variant", "antologia1957", "B", "La ficha coincide con la cronología que vincula el poemario y el premio a 1945."),
+            claim("Premio Nacional de Poesía José Santos Chocano en 1945", "premios", "stable", "antologia1957", "B", "Dato biobibliográfico contemporáneo al círculo literario de Eielson."),
+            claim("Lo clasifica como representante de la tendencia purista", "identidad", "variant", "antologia1957", "I", "Muestra cómo una antología también construye una posición estética para el autor.")
+          ])
+        ]),
+        sourceNode("rama_florida", [
+          category("Nacimiento", [
+            claim("Jorge Eduardo Eielson (1922)", "nacimiento", "conflict", "rama_florida", "B", "Fecha impresa durante la vida del artista en una publicación de la editorial de Javier Sologuren.")
+          ]),
+          category("Premios y obra", [
+            claim("Reinos figura como publicado en Lima en 1944", "premios", "variant", "rama_florida", "B", "Entra en tensión con cronologías que fechan Reinos y el premio en 1945.")
+          ])
+        ])
+      ]),
+
+      lineage("self_lineage", [
+        sourceNode("ribeyro", [
+          category("Identidad", [
+            claim("«No soy poeta-pintor ni pintor-poeta»", "identidad", "stable", "ribeyro", "A", "Rechaza una categoría capaz de fijar la multiplicidad de sus prácticas."),
+            claim("«Como ves, no soy nada»", "identidad", "stable", "ribeyro", "A", "La negación funciona como forma de resistencia frente a las identidades profesionales cerradas."),
+            claim("Poesía y artes visuales coincidieron principalmente entre 1948 y 1952", "identidad", "variant", "ribeyro", "A", "Periodización retrospectiva realizada por el propio artista.")
+          ])
+        ]),
+        sourceNode("naturaleza", [
+          category("Nacimiento", [
+            claim("Su corazón late desde el 13 de abril de 1924", "nacimiento", "conflict", "naturaleza", "A", "Autorreferencia poética que sostiene la fecha posteriormente canonizada.")
+          ])
+        ]),
+        sourceNode("canfield_dialogue", [
+          category("Identidad", [
+            claim("Intentó hacer de su vida una obra de arte", "identidad", "variant", "canfield_dialogue", "A", "Declaración que respalda la idea de una participación activa en la construcción de su propia figura."),
+            claim("Quiso hacer de su muerte una última obra de arte", "identidad", "variant", "canfield_dialogue", "A", "Explica su deseo de dispersar sus cenizas en el espacio.")
+          ])
+        ])
+      ]),
+
+      lineage("witness_lineage", [
+        sourceNode("szyszlo", [
+          category("Residencias y vida cotidiana", [
+            claim("Vivía en el jirón Pumacahua, en Lince", "residencias", "stable", "szyszlo", "P", "Confirma el área de residencia, aunque no proporciona el número exacto."),
+            claim("Visitaban el museo de Magdalena entre 1945 y 1946", "formacion", "stable", "szyszlo", "P", "Relaciona la formación visual de Eielson con el arte precolombino.")
+          ]),
+          category("Salida a Europa", [
+            claim("Llegó a París en 1948", "viaje", "conflict", "szyszlo", "P", "Szyszlo afirma que él llegó un año después, en 1949.")
+          ]),
+          category("Espiritualidad", [
+            claim("El Eielson que conoció era completamente agnóstico", "espiritualidad", "variant", "szyszlo", "P", "Entra en tensión con retratos posteriores centrados en el zen y la espiritualidad.")
+          ])
+        ]),
+        sourceNode("hinostroza", [
+          category("Residencias y vida cotidiana", [
+            claim("Vivía con Michele en 7 bis rue de Lanneau, París", "residencias", "stable", "hinostroza", "P", "Dirección y entorno observados por Hinostroza."),
+            claim("El taller tenía el piso pintado de blanco y nudos en las paredes", "residencias", "stable", "hinostroza", "P", "Descripción directa del espacio doméstico y de trabajo.")
+          ]),
+          category("Formación y redes", [
+            claim("Frecuentaba artistas del Nouveau Réalisme y otras vanguardias", "formacion", "stable", "hinostroza", "P", "Reconstruye el ambiente artístico parisino de Eielson.")
+          ])
+        ]),
+        sourceNode("hastings", [
+          category("Residencias y vida cotidiana", [
+            claim("Se conocieron en París en 1970 y fueron vecinos", "residencias", "stable", "hastings", "P", "Testimonio de amistad y convivencia cotidiana."),
+            claim("Vivía principalmente de la venta de su obra plástica", "residencias", "variant", "hastings", "P", "La literatura no constituía su principal sustento económico.")
+          ]),
+          category("Identidad", [
+            claim("Se sentía extranjero en todas partes", "identidad", "variant", "hastings", "P", "Desplaza la imagen de una pertenencia nacional estable.")
+          ])
+        ]),
+        sourceNode("bueno", [
+          category("Formación y redes", [
+            claim("En 1943 ya circulaba con Sologuren y Salazar Bondy", "formacion", "stable", "bueno", "P", "Testimonio temprano de su inserción en el ambiente literario limeño."),
+            claim("Ya publicaban en la edición vespertina de El Comercio", "formacion", "variant", "bueno", "P", "Aporta contexto para la actividad pública de Eielson antes del premio de Reinos.")
+          ])
+        ])
+      ]),
+
+      lineage("synthesis_lineage", [
+        sourceNode("nudo2002", [
+          category("Nacimiento", [
+            claim("La semblanza y la cronología adoptan 1924", "nacimiento", "conflict", "nudo2002", "I", "En 2002 el volumen consolida la secuencia 1924–1945, aunque contiene autonarraciones que complejizan una biografía estable.")
+          ]),
+          category("Familia e infancia", [
+            claim("Eielson recuerda un abuelo de origen noruego", "familia", "variant", "nudo2002", "A", "La autonarración desplaza hacia el abuelo el origen noruego que otras semblanzas atribuyen al padre."),
+            claim("Recuerda dos hermanas y un hermano diez años mayor, muerto a los veinticinco", "familia", "variant", "nudo2002", "A", "La composición familiar no coincide plenamente con todos los relatos institucionales."),
+            claim("Describe su infancia como muy buena", "familia", "conflict", "nudo2002", "A", "Entra en tensión con las versiones centradas en abandono, adopción y crisis familiar.")
+          ]),
+          category("Formación y redes", [
+            claim("Recuerda haber estudiado en el Anglo-Peruano y el Alfonso Ugarte", "formacion", "variant", "nudo2002", "A", "Autonarración escolar retrospectiva."),
+            claim("Xammar y Arguedas aparecen como profesores", "formacion", "stable", "nudo2002", "A", "El volumen reúne dos figuras maestras que cumplen funciones distintas en el relato de su formación."),
+            claim("Arguedas sospechó que había copiado composiciones sobre los trágicos griegos", "formacion", "conflict", "nudo2002", "A", "La matriz narrativa reproduce casi exactamente la escena documentada en la carta a Xammar: obra excepcional, sospecha de copia y posterior reconocimiento."),
+            claim("Conoció a Sologuren en 1939 y vivían cerca de la vieja casona de San Marcos", "formacion", "stable", "nudo2002", "A", "El recuerdo contribuye a localizar espacialmente su red literaria juvenil.")
+          ]),
+          category("Salida a Europa", [
+            claim("La cronología sitúa el viaje a París en 1948", "viaje", "conflict", "nudo2002", "I", "Coincide con el MALI, Szyszlo y otras fuentes frente al linaje de 1949.")
+          ]),
+          category("Identidad", [
+            claim("Define su actividad como «constantemente inestable y fluida»", "identidad", "stable", "nudo2002", "A", "La declaración ofrece una clave para comprender su resistencia a identidades profesionales cerradas."),
+            claim("Padilla afirma que la disposición del volumen produce «un cierto Eielson»", "identidad", "stable", "nudo2002", "I", "El propio dispositivo editorial reconoce que seleccionar y anudar fuentes construye una imagen del artista."),
+            claim("El lenguaje matemático, musical y geométrico alcanza una forma elevada de abstracción", "identidad", "variant", "nudo2002", "A", "El volumen documenta de modo explícito su relación intelectual con matemáticas, topología, fractales, redes y caos.")
+          ])
+        ]),
+        sourceNode("mali", [
+          category("Nacimiento", [
+            claim("Nace en Lima el 13 de abril de 1921", "nacimiento", "conflict", "mali", "I", "El catálogo adopta el año de la partida judicial de 1948."),
+            claim("Primer hijo de Oliver Eielson y Zoila Sánchez", "familia", "variant", "mali", "I", "Reconstrucción familiar sustentada en archivos y registros estadounidenses.")
+          ]),
+          category("Familia e infancia", [
+            claim("En 1925 el padre estaba nuevamente en Hatton, Dakota del Norte", "familia", "variant", "mali", "I", "Dato apoyado en censos y prensa estadounidense."),
+            claim("En 1930 el padre volvió a Lima y luego abandonó definitivamente la familia", "familia", "conflict", "mali", "I", "Formula el abandono como una crisis moral, social y económica."),
+            claim("Se trasladó con su madre adoptiva y sus hermanos Enrique, Carmen y Felicia", "familia", "conflict", "mali", "I", "Complejiza la oposición simple entre madre biológica y familia adoptiva.")
+          ]),
+          category("Formación", [
+            claim("A los doce años escribió poemas dedicados a sus hermanas", "formacion", "variant", "mali", "I", "Cronología: 1933."),
+            claim("Arguedas y Luis Fabio Xammar fueron sus profesores", "formacion", "stable", "mali", "I", "Periodo escolar 1935–1940."),
+            claim("Conoció a Javier Sologuren en 1939", "formacion", "stable", "mali", "I", "El encuentro se vincula con poemas sobre un viaje a la selva."),
+            claim("Publicó sus primeros poemas en 1942", "formacion", "variant", "mali", "I", "Tiempo reunido en Signo y Rapsodia del corazón herido en La Prensa.")
+          ]),
+          category("Premios y obra", [
+            claim("Ganó el Premio Nacional de Poesía con Reinos en 1945", "premios", "variant", "mali", "I", "Distingue la edición/premio de 1945 frente a la ficha de La Rama Florida que fecha Reinos en 1944."),
+            claim("Maquillage obtuvo el tercer lugar del concurso teatral en 1948", "premios", "conflict", "mali", "I", "Distingue el premio de su estreno posterior."),
+            claim("Maquillage se estrenó en Lima el 25 de mayo de 1950", "premios", "stable", "mali", "I", "La cronología separa premio, publicación y estreno.")
+          ]),
+          category("Salida a Europa", [
+            claim("Viajó a Europa y llegó a Francia en 1948", "viaje", "conflict", "mali", "I", "Tras llegar a Marsella se dirigió a París y se alojó con Jules Supervielle."),
+            claim("Realizó su primera exposición personal europea en 1949", "viaje", "stable", "mali", "I", "Ayuda a explicar por qué algunas cronologías confunden 1948 y 1949."),
+            claim("Viajó a Italia y decidió permanecer en Roma en 1951", "viaje", "stable", "mali", "I", "Viaje realizado junto a Javier Sologuren.")
+          ])
+        ]),
+        sourceNode("canfield2006", [
+          category("Nacimiento", [
+            claim("Nace en Lima en 1924 y muere en 2006 a los 82 años", "nacimiento", "conflict", "canfield2006", "I", "Cronología ya consolidada por Canfield en 2006.")
+          ]),
+          category("Premios y obra", [
+            claim("Tenía 21 años cuando obtuvo el Premio Nacional de Poesía", "premios", "conflict", "canfield2006", "I", "La edad depende del nacimiento en 1924 y del premio fechado en 1945.")
+          ]),
+          category("Espiritualidad", [
+            claim("Su obra alcanza una serenidad vinculada al zen y a la armonía de los opuestos", "espiritualidad", "variant", "canfield2006", "I", "Construye la imagen del artista contemplativo, distinta del agnosticismo recordado por Szyszlo.")
+          ])
+        ])
+      ]),
+
+      lineage("institutional_lineage", [
+        sourceNode("centrostudi", [
+          category("Nacimiento", [
+            claim("13 de abril de 1924", "nacimiento", "conflict", "centrostudi", "I", "Fecha canónica reproducida por numerosos espacios institucionales.")
+          ]),
+          category("Familia", [
+            claim("Madre peruana y padre norteamericano de origen noruego", "familia", "variant", "centrostudi", "I", "Fórmula repetida en biografías posteriores.")
+          ]),
+          category("Salida a Europa", [
+            claim("Viaje a París en 1949", "viaje", "conflict", "centrostudi", "I", "Entra en tensión con MALI, BNP y Szyszlo, que sitúan la llegada en 1948.")
+          ])
+        ]),
+        sourceNode("festival", [
+          category("Nacimiento", [
+            claim("13 de abril de 1924", "nacimiento", "conflict", "festival", "I", "La celebración del centenario institucionaliza esta fecha.")
+          ]),
+          category("Familia", [
+            claim("Madre peruana y padre norteamericano de origen noruego", "familia", "variant", "festival", "I", "Coincide casi literalmente con el Centro Studi.")
+          ]),
+          category("Salida a Europa", [
+            claim("Viaje a París en 1949", "viaje", "conflict", "festival", "I", "No constituye una confirmación independiente del Centro Studi.")
+          ])
+        ]),
+        sourceNode("archivio", [
+          category("Nacimiento", [
+            claim("Nace en Lima en 1924", "nacimiento", "conflict", "archivio", "I", "Entra en tensión con 1921, 1922 y la inferencia de 1923.")
+          ]),
+          category("Familia e infancia", [
+            claim("El padre muere cuando Eielson tenía siete años", "familia", "conflict", "archivio", "I", "Compite con el abandono reconstruido por MALI y BBVA."),
+            claim("Fue criado por su madre, una hermana y un hermano", "familia", "conflict", "archivio", "I", "Difiere de la madre adoptiva y tres hermanos del catálogo MALI.")
+          ]),
+          category("Identidad", [
+            claim("Cuatro culturas: española, italiana, sueca y nazca", "identidad", "variant", "archivio", "A", "Formulación atribuida a entrevistas de Eielson.")
+          ]),
+          category("Salida a Europa", [
+            claim("El propio sitio oscila entre 1948 y 1949", "viaje", "conflict", "archivio", "I", "Variación interna de la fuente institucional.")
+          ])
+        ]),
+        sourceNode("bnp", [
+          category("Nacimiento", [
+            claim("13 de abril de 1924", "nacimiento", "conflict", "bnp", "I", "Fecha asumida en la nota del centenario.")
+          ]),
+          category("Familia e infancia", [
+            claim("A los siete años viajó a Estados Unidos con su madre y hermanos", "familia", "conflict", "bnp", "I", "No coincide con la muerte paterna ni con el relato de adopción.")
+          ]),
+          category("Salida a Europa", [
+            claim("Beca francesa y traslado a París en 1948", "viaje", "conflict", "bnp", "I", "Coincide con MALI y Szyszlo frente a 1949.")
+          ]),
+          category("Teatro", [
+            claim("Maquillage obtiene el tercer premio en 1946", "premios", "conflict", "bnp", "I", "El catálogo MALI y BBVA sitúan el premio en 1948.")
+          ])
+        ]),
+        sourceNode("caslit", [
+          category("Formación y redes", [
+            claim("Integrante de la Generación del 50 y estudiante de Letras en San Marcos", "formacion", "stable", "caslit", "I", "Prioriza la inserción literaria y universitaria."),
+            claim("Vínculos con Arguedas, Sologuren, Salazar Bondy, Varela y Szyszlo", "formacion", "stable", "caslit", "I", "Reconstrucción de su red intelectual limeña.")
+          ]),
+          category("Teatro", [
+            claim("Maquillage recibe el reconocimiento teatral en 1946", "premios", "conflict", "caslit", "I", "Entra en tensión con el MALI y BBVA.")
+          ])
+        ]),
+        sourceNode("cancilleria", [
+          category("Nacimiento", [
+            claim("13 de abril de 1924", "nacimiento", "conflict", "cancilleria", "I", "Adopta la fecha institucional tradicional.")
+          ]),
+          category("Familia", [
+            claim("Padre norteamericano de origen noruego y madre peruana", "familia", "variant", "cancilleria", "I", "Repite la fórmula Centro Studi.")
+          ]),
+          category("Espiritualidad", [
+            claim("Formación europea y oriental asociada al budismo zen", "espiritualidad", "variant", "cancilleria", "I", "Construye una imagen espiritual e intercultural.")
+          ])
+        ]),
+        sourceNode("bbva", [
+          category("Nacimiento", [
+            claim("13 de abril de 1924", "nacimiento", "conflict", "bbva", "I", "Convive con una narrativa familiar distinta de la del Centro Studi.")
+          ]),
+          category("Familia e infancia", [
+            claim("Fue abandonado por su padre", "familia", "conflict", "bbva", "I", "Coincide parcialmente con la reconstrucción del MALI."),
+            claim("Su madre lo entregó en adopción por falta de recursos", "familia", "conflict", "bbva", "I", "Simplifica una historia que el MALI presenta como más compleja."),
+            claim("Creció con una madre y hermanas adoptivas", "familia", "conflict", "bbva", "I", "Difiere del Archivio y de la BNP.")
+          ]),
+          category("Teatro", [
+            claim("Maquillage obtiene el tercer premio en 1948", "premios", "conflict", "bbva", "I", "Coincide con el catálogo MALI frente a 1946.")
+          ])
+        ])
+      ])
+    ]
+  };
+
+  var svg = d3.select("#chart");
+  var tooltip = d3.select("#tooltip");
+  var inspector = document.getElementById("inspector");
+  var searchInput = document.getElementById("search");
+  var topicFilter = document.getElementById("topicFilter");
+  var conflictsOnly = false;
+  var compareModeTopic = null;
+  var compareButtons = Array.prototype.slice.call(document.querySelectorAll(".compare-topic"));
+
+  var vbW = 2200, vbH = 2200;
+  svg.attr("viewBox", "0 0 " + vbW + " " + vbH).attr("preserveAspectRatio", "xMidYMid meet");
+
+  var center = { x: 1100, y: 1125 };
+  var radius = 835;
+  var gRoot = svg.append("g").attr("transform", "translate(" + center.x + "," + center.y + ")");
+  var zoomLayer = gRoot.append("g").attr("class", "zoom-layer");
+
+  var zoom = d3.behavior.zoom()
+    .scaleExtent([0.55, 2.65])
+    .on("zoom", function () {
+      zoomLayer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    });
+  svg.call(zoom).on("dblclick.zoom", null);
+
+  var cluster = d3.layout.cluster()
+    .size([360, radius])
+    .separation(function (a, b) {
+      return (a.parent === b.parent ? 1.0 : 1.75) / Math.max(1, a.depth);
+    });
+
+  var nodes = cluster.nodes(data);
+  var links = cluster.links(nodes);
+
+  // Place each semantic level on a stable ring.
+  nodes.forEach(function (d) {
+    if (d.kind === "lineage") d.y = 175;
+    else if (d.kind === "source") d.y = 345;
+    else if (d.kind === "category") d.y = 515;
+    else if (d.kind === "claim") d.y = radius;
+  });
+
+  var diagonal = d3.svg.diagonal.radial()
+    .projection(function (d) { return [d.y, d.x / 180 * Math.PI]; });
+
+  zoomLayer.append("circle").attr("class", "ring").attr("r", radius);
+  zoomLayer.append("circle").attr("class", "ring").attr("r", 515);
+  zoomLayer.append("circle").attr("class", "ring").attr("r", 345);
+  zoomLayer.append("circle").attr("class", "ring").attr("r", 175);
+
+  var link = zoomLayer.selectAll("path.link")
+    .data(links)
+    .enter().append("path")
+    .attr("class", function (d) {
+      var classes = "link";
+      if (d.target.depth === 1) classes += " lineage-link";
+      if (d.target.status === "conflict" || hasConflictDescendant(d.target)) classes += " conflict-link";
+      return classes;
+    })
+    .style("stroke", function (d) {
+      var sid = getSourceId(d.target);
+      if (d.target.status === "conflict" && d.target.kind === "claim") return "#b34f49";
+      return sid ? SOURCES[sid].color : null;
+    })
+    .attr("d", diagonal);
+
+  var node = zoomLayer.selectAll("g.node")
+    .data(nodes)
+    .enter().append("g")
+    .attr("class", function (d) {
+      var cls = "node " + (d.kind || "claim");
+      if (d.status === "conflict") cls += " conflict";
+      return cls;
+    })
+    .attr("transform", function (d) {
+      return d.depth === 0 ? "translate(0,0)" : "rotate(" + (d.x - 90) + ")translate(" + d.y + ")";
+    })
+    .on("mouseover", handleOver)
+    .on("mousemove", handleMove)
+    .on("mouseout", handleOut)
+    .on("click", function (d) {
+      d3.event.stopPropagation();
+      if (d.topic) {
+        compareModeTopic = d.topic;
+        syncCompareButtons();
+        compareTopic(d.topic, d);
+      } else {
+        inspect(d);
+        setActive(d);
+      }
+    });
+
+  node.append("circle")
+    .attr("r", function (d) {
+      if (d.depth === 0) return 94;
+      if (d.kind === "lineage") return 11;
+      if (d.kind === "source") return 6.4;
+      if (d.kind === "category") return 4.6;
+      return d.status === "conflict" ? 5.0 : 3.5;
+    })
+    .style("stroke", function (d) {
+      var sid = getSourceId(d);
+      return sid ? SOURCES[sid].color : null;
+    });
+
+  // Root label uses several centered lines.
+  var rootText = node.filter(function (d) { return d.depth === 0; })
+    .append("text")
+    .attr("dy", "-.95em");
+  rootText.append("tspan").attr("x", 0).text("Jorge");
+  rootText.append("tspan").attr("x", 0).attr("dy", "1.15em").text("Eduardo");
+  rootText.append("tspan").attr("x", 0).attr("dy", "1.15em").text("Eielson");
+
+  node.filter(function (d) { return d.depth > 0; })
+    .append("text")
+    .attr("dy", ".32em")
+    .attr("x", function (d) { return d.x < 180 ? 13 : -13; })
+    .attr("text-anchor", function (d) { return d.x < 180 ? "start" : "end"; })
+    .attr("transform", function (d) { return d.x < 180 ? null : "rotate(180)"; })
+    .each(function (d) {
+      var maxChars = d.kind === "lineage" ? 25 : (d.kind === "source" ? 22 : (d.kind === "category" ? 18 : 32));
+      appendWrappedText(d3.select(this), d.name, maxChars, d.x < 180 ? 13 : -13);
+    });
+
+  node.filter(function (d) { return d.status === "conflict" && d.kind === "claim"; })
+    .append("text")
+    .attr("class", "conflict-mark")
+    .attr("transform", function (d) { return d.x < 180 ? null : "rotate(180)"; })
+    .attr("dy", ".34em")
+    .text("!");
+
+  svg.on("click", function () {
+    clearActive();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    searchInput.value = "";
+    topicFilter.value = "all";
+    conflictsOnly = false;
+    compareModeTopic = null;
+    syncCompareButtons();
+    document.getElementById("conflictsBtn").textContent = "Solo contradicciones";
+    applyFilters();
+    resetZoom();
+    inspector.innerHTML = "<strong>Explora el mapa</strong><span class='meta'>Haz clic en un linaje, institución o dato para ver su procedencia, tema y relación con otras versiones.</span>";
+  });
+  document.getElementById("conflictsBtn").addEventListener("click", function () {
+    conflictsOnly = !conflictsOnly;
+    this.textContent = conflictsOnly ? "Mostrar todo" : "Solo contradicciones";
+    applyFilters();
+  });
+  document.getElementById("fitBtn").addEventListener("click", resetZoom);
+  document.getElementById("exportSvg").addEventListener("click", exportSvg);
+  searchInput.addEventListener("input", function(){ compareModeTopic = null; syncCompareButtons(); applyFilters(); });
+  topicFilter.addEventListener("change", function(){ compareModeTopic = null; syncCompareButtons(); applyFilters(); });
+  compareButtons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      compareModeTopic = this.getAttribute("data-topic");
+      topicFilter.value = "all";
+      searchInput.value = "";
+      syncCompareButtons();
+      compareTopic(compareModeTopic);
+    });
+  });
+  document.getElementById("clearCompare").addEventListener("click", function(){
+    compareModeTopic = null;
+    syncCompareButtons();
+    applyFilters();
+    inspector.innerHTML = "<strong>Explora el mapa</strong><span class='meta'>Haz clic en un linaje, una institución o un dato para ver su procedencia, tema y relación con otras versiones.</span>";
+  });
+
+  function appendWrappedText(selection, text, maxChars, x) {
+    var words = text.split(/\s+/), lines = [], line = "";
+    words.forEach(function (word) {
+      var trial = line ? line + " " + word : word;
+      if (trial.length > maxChars && line) { lines.push(line); line = word; }
+      else line = trial;
+    });
+    if (line) lines.push(line);
+    var offset = -((lines.length - 1) * 0.56);
+    lines.forEach(function (ln, i) {
+      selection.append("tspan")
+        .attr("x", x)
+        .attr("dy", i === 0 ? offset + "em" : "1.12em")
+        .text(ln);
+    });
+  }
+
+  function getSourceId(d) {
+    var n = d;
+    while (n) { if (n.sourceId) return n.sourceId; n = n.parent; }
+    return null;
+  }
+
+  function hasConflictDescendant(d) {
+    var found = false;
+    walk(d, function (n) { if (n.status === "conflict") found = true; });
+    return found;
+  }
+
+  function walk(d, fn) {
+    fn(d);
+    if (d.children) d.children.forEach(function (c) { walk(c, fn); });
+  }
+
+  function ancestorsSet(d) {
+    var s = {};
+    var n = d;
+    while (n) { s[n.name + "|" + n.depth + "|" + n.x] = true; n = n.parent; }
+    return s;
+  }
+
+  function descendantSet(d) {
+    var s = {};
+    walk(d, function (n) { s[n.name + "|" + n.depth + "|" + n.x] = true; });
+    return s;
+  }
+
+  function key(d) { return d.name + "|" + d.depth + "|" + d.x; }
+
+  function handleOver(d) {
+    var a = ancestorsSet(d), desc = descendantSet(d);
+    node.classed("dimmed", function (n) { return !a[key(n)] && !desc[key(n)]; })
+        .classed("active", function (n) { return !!a[key(n)] || !!desc[key(n)]; });
+    link.classed("dimmed", function (l) { return !a[key(l.target)] && !desc[key(l.target)]; })
+        .classed("active", function (l) { return !!a[key(l.target)] || !!desc[key(l.target)]; });
+
+    var sid = getSourceId(d), source = sid ? SOURCES[sid] : null;
+    tooltip.html("<strong>" + escapeHtml(d.name) + "</strong>" +
+      (source ? "<div class='tip-meta'>" + escapeHtml(source.label) + "</div>" : "") +
+      (d.evidence ? "<div class='tip-meta'>" + escapeHtml(EVIDENCE_LABELS[d.evidence] || d.evidence) + " [" + escapeHtml(d.evidence) + "]</div>" : "") +
+      (d.status === "conflict" ? "<div class='tip-meta'>Nudo de contradicción</div>" : ""))
+      .classed("visible", true);
+  }
+
+  function handleMove() {
+    tooltip.style("left", (d3.event.clientX + 14) + "px").style("top", (d3.event.clientY + 14) + "px");
+  }
+
+  function handleOut() {
+    tooltip.classed("visible", false);
+    applyFilters();
+  }
+
+  function inspect(d) {
+    var sid = getSourceId(d), source = sid ? SOURCES[sid] : null;
+    var html = "<strong>" + escapeHtml(d.name) + "</strong>";
+    if (source) {
+      html += "<div class='meta'>" + escapeHtml(source.type) + " · " + escapeHtml(source.label) + "</div>";
+    }
+    if (d.topic) html += "<div><b>Tema:</b> " + topicName(d.topic) + "</div>";
+    if (d.evidence) html += "<div><b>Tipo de evidencia:</b> " + escapeHtml(EVIDENCE_LABELS[d.evidence] || d.evidence) + " (" + escapeHtml(d.evidence) + ")</div>";
+    if (d.status === "conflict") html += "<div><b>Estado:</b> nudo de contradicción</div>";
+    else if (d.status === "variant") html += "<div><b>Estado:</b> variante narrativa</div>";
+    if (d.note) html += "<div style='margin-top:6px'>" + escapeHtml(d.note) + "</div>";
+    else if (source && source.note) html += "<div style='margin-top:6px'>" + escapeHtml(source.note) + "</div>";
+    if (source && source.reference) html += "<div class='meta' style='margin-top:7px'><b>Referencia:</b> " + escapeHtml(source.reference) + "</div>";
+    if (source && source.url) html += "<div style='margin-top:7px'><a target='_blank' rel='noopener' href='" + source.url + "'>Abrir fuente ↗</a></div>";
+    inspector.innerHTML = html;
+  }
+
+  function topicName(t) {
+    return ({nacimiento:"Nacimiento", familia:"Familia e infancia", viaje:"Salida del Perú / Europa", formacion:"Formación y redes", premios:"Premios y obra", identidad:"Identidad y autorrepresentación", residencias:"Residencias y vida cotidiana", espiritualidad:"Espiritualidad"})[t] || t;
+  }
+
+  function setActive(d) {
+    var a = ancestorsSet(d), desc = descendantSet(d);
+    node.classed("dimmed", function (n) { return !a[key(n)] && !desc[key(n)]; })
+        .classed("active", function (n) { return !!a[key(n)] || !!desc[key(n)]; });
+    link.classed("dimmed", function (l) { return !a[key(l.target)] && !desc[key(l.target)]; })
+        .classed("active", function (l) { return !!a[key(l.target)] || !!desc[key(l.target)]; });
+  }
+
+  function clearActive() { applyFilters(); }
+
+  function syncCompareButtons() {
+    compareButtons.forEach(function(btn){
+      btn.classList.toggle("active-compare", btn.getAttribute("data-topic") === compareModeTopic);
+    });
+    document.getElementById("clearCompare").classList.toggle("active-compare", !compareModeTopic);
+  }
+
+  function compareTopic(topic, focusNode) {
+    var matches = {};
+    var claims = nodes.filter(function(n){ return n.kind === "claim" && n.topic === topic; });
+    claims.forEach(function(d){
+      var n = d;
+      while (n) { matches[key(n)] = true; n = n.parent; }
+    });
+    node.classed("dimmed", function(d){ return !matches[key(d)]; })
+        .classed("active", function(d){ return !!matches[key(d)] && (d.kind === "claim" || d.kind === "source" || d.kind === "lineage"); });
+    link.classed("dimmed", function(l){ return !matches[key(l.target)]; })
+        .classed("active", function(l){ return !!matches[key(l.target)] && (l.target.kind === "claim" || l.target.kind === "source" || l.target.kind === "lineage"); });
+
+    var topicLabel = topicName(topic);
+    var groups = {};
+    claims.forEach(function(c){
+      var sid = getSourceId(c);
+      if (!groups[sid]) groups[sid] = [];
+      groups[sid].push(c);
+    });
+
+    var order = Object.keys(groups).sort(function(a,b){ return SOURCES[a].label.localeCompare(SOURCES[b].label, 'es'); });
+    var html = "<strong>Comparación por tema: " + escapeHtml(topicLabel) + "</strong>";
+    html += "<div class='meta'>Se agrupan automáticamente las afirmaciones de cada fuente sobre este tema para facilitar la comparación.</div>";
+    var conflictCount = claims.filter(function(c){ return c.status === 'conflict'; }).length;
+    if (conflictCount) html += "<div class='comparison-badge'>" + conflictCount + " nudos de contradicción detectados</div>";
+    order.forEach(function(sid){
+      var source = SOURCES[sid];
+      html += "<div class='comparison-group'><h4>" + escapeHtml(source.label) + "</h4><ul>";
+      groups[sid].forEach(function(c){
+        html += "<li>" + escapeHtml(c.name);
+        if (c.evidence) html += " <span class='meta'>[" + escapeHtml(c.evidence) + "]</span>";
+        if (c.status === 'conflict') html += " <strong>(contradicción)</strong>";
+        else if (c.status === 'variant') html += " <strong>(variante)</strong>";
+        if (c.note) html += "<br><span class='meta'>" + escapeHtml(c.note) + "</span>";
+        html += "</li>";
+      });
+      if (source.url) html += "</ul><div style='margin-top:6px'><a target='_blank' rel='noopener' href='" + source.url + "'>Abrir fuente oficial ↗</a></div></div>";
+      else html += "</ul></div>";
+    });
+    inspector.innerHTML = html;
+  }
+
+  function applyFilters() {
+    if (compareModeTopic) { compareTopic(compareModeTopic); return; }
+    var q = normalize(searchInput.value);
+    var topic = topicFilter.value;
+
+    var matches = {};
+    nodes.forEach(function (d) {
+      var textMatch = !q || normalize(d.name).indexOf(q) >= 0;
+      var topicMatch = topic === "all" || d.topic === topic || hasTopicDescendant(d, topic);
+      var conflictMatch = !conflictsOnly || d.status === "conflict" || hasConflictDescendant(d);
+      if (textMatch && topicMatch && conflictMatch) {
+        var n = d;
+        while (n) { matches[key(n)] = true; n = n.parent; }
+        walk(d, function (c) { matches[key(c)] = true; });
+      }
+    });
+
+    var noFilter = !q && topic === "all" && !conflictsOnly;
+    node.classed("dimmed", function (d) { return noFilter ? false : !matches[key(d)]; })
+        .classed("active", false);
+    link.classed("dimmed", function (d) { return noFilter ? false : !matches[key(d.target)]; })
+        .classed("active", false);
+  }
+
+  function hasTopicDescendant(d, topic) {
+    var found = false;
+    walk(d, function (n) { if (n.topic === topic) found = true; });
+    return found;
+  }
+
+  function normalize(s) {
+    return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function resetZoom() {
+    zoom.translate([0, 0]).scale(1);
+    zoomLayer.transition().duration(450).attr("transform", "translate(0,0)scale(1)");
+  }
+
+  function exportSvg() {
+    var clone = document.getElementById("chart").cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    var css = document.querySelector("style").textContent;
+    var style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+    style.textContent = css;
+    clone.insertBefore(style, clone.firstChild);
+    var source = new XMLSerializer().serializeToString(clone);
+    var blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = "mapa_radial_biografias_eielson.svg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>'"]/g, function (c) {
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[c];
+    });
+  }
+})();
+</script>
+</body>
+</html>
