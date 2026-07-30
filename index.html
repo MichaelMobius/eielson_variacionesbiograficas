@@ -918,7 +918,7 @@
   var zoomLayer = gRoot.append("g").attr("class", "zoom-layer");
 
   var zoom = d3.behavior.zoom()
-    .scaleExtent([0.55, 2.65])
+    .scaleExtent([0.55, 4.0])
     .on("zoom", function () {
       zoomLayer.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
     });
