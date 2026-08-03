@@ -1,6 +1,6 @@
 # Cartografía biográfica de Jorge Eduardo Eielson — versión 7
 
-Mapa radial interactivo construido con **D3.js** para explorar documentos, autonarraciones, testimonios, fuentes biobibliográficas, síntesis curatoriales y biografías institucionales vinculadas a Jorge Eduardo Eielson.
+Quipu radial interactivo construido con **D3.js** para explorar documentos, autonarraciones, testimonios, fuentes biobibliográficas, síntesis curatoriales y biografías institucionales vinculadas a Jorge Eduardo Eielson.
 
 La versión 7 parte del archivo histórico anterior del proyecto y **no sustituye sus fuentes**: conserva sus linajes, nodos y relaciones, y añade las nuevas fuentes impresas trabajadas posteriormente.
 
